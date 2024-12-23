@@ -1,0 +1,36 @@
+kubeControllerManager:
+  enabled: false
+
+kubeEtcd:
+  enabled: false
+
+kubeScheduler:
+  enabled: false
+
+prometheus: 
+#  service:
+#    externalTrafficPolicy: Cluster
+#    type: LoadBalancer
+
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+        nginx.ingress.kubernetes.io/auth-type: basic
+        nginx.ingress.kubernetes.io/auth-secret: 'monitoring/secret-wildcard-basic-auth'
+        nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
+    hosts:
+      - prometheus.minikube.local
+    path: /
+    tls:
+      - secretName: secret-wildcard-tls
+        hosts:
+          - prometheus.minikube.local
+ 
+  prometheusSpec:
+    enableAdminAPI: true
+    evaluationInterval: 20s
+    replicas: 1
+    retention: 3d
+    scrapeInterval: 30s
+    scrapeTimeout: 10s

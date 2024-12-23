@@ -1,0 +1,42 @@
+[
+  {
+    "id": "redeploy",
+    "execute-command": "/home/jzoltan/munka/redeploy.sh",
+    "command-working-directory": "/home/jzoltan/munka",
+    "response-message": "I got the payload! Command activated.\n",
+    "pass-arguments-to-command":
+    [
+      { "source": "entire-payload" }
+    ],
+    "trigger-rule":
+    {
+      "and":
+      [
+        {
+          "match":
+          {
+            "type": "value",
+            "value": "webhook",
+            "parameter":
+            {
+              "source": "payload",
+              "name": "receiver"
+            }
+          }
+        },
+        {
+          "match":
+          {
+            "type": "regex",
+            "value": "(firing|resolved)",
+            "parameter":
+            {
+              "source": "payload",
+              "name": "status"
+            }
+          }
+        }
+      ]
+    }
+  }
+]

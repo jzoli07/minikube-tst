@@ -1,0 +1,44 @@
+replicaCount: 1
+
+#service:
+#  externalTrafficPolicy: Cluster
+#  type: LoadBalancer
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hosts:
+    - minikube.karma.local
+  path: /
+
+serviceMonitor:
+  enabled: true
+
+tolerations:
+  - operator: Exists
+    effect: NoSchedule
+
+configMap:
+  enabled: true
+  rawConfig:
+    annotations:
+      default:
+        hidden: false
+      hidden:
+        - help
+      visible: []
+    alertmanager:
+      interval: 30s
+      servers:
+        - name: minikube
+          uri: http://minikube.alertmanager.local
+          timeout: 10s
+          proxy: false
+          tls:
+            insecureSkipVerify: true
+    history:
+      enabled: true
+    ui:
+      colorTitlebar: true
+      theme: "dark"
+      animations: true

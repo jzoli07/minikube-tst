@@ -1,0 +1,173 @@
+prometheus:
+  prometheusSpec:
+    additionalScrapeConfigs:
+    - job_name: "grafana"
+      metrics_path: /metrics
+      static_configs:
+      - targets:
+        - prom-grafana.monitoring.svc.cluster.local:80
+
+    - job_name: "pushgateway"
+      metrics_path: /metrics
+      honor_labels: true
+      scrape_interval: 5s
+      static_configs:
+      - labels:
+          talma: alma
+          tkorte: korte
+          tbarack: barack
+      - targets:
+        - prom-pushgateway-prometheus-pushgateway.monitoring.svc.cluster.local:9091
+
+    - job_name: "mysql_exporter"
+      metrics_path: /metrics
+      honor_labels: true
+      static_configs:
+      - targets:
+        - prom-mysql-exporter-prometheus-mysql-exporter.monitoring.svc.cluster.local:9104
+
+    - job_name: "apache_exporter"
+      static_configs:
+      - targets:
+        - host.minikube.internal:9117
+    
+    - job_name: "blackbox_exporter"
+      metrics_path: /metrics
+      honor_labels: true
+      static_configs:
+      - targets:
+        - prom-blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+
+    - job_name: "blackbox_exporter/static-endpoints"
+      metrics_path: /probe
+      scrape_interval: 60s
+      scrape_timeout: 10s
+      params:
+        module:
+        - http_2xx_get
+      static_configs:
+#       - labels:
+#           tenvironment: minikube
+      - targets:
+        - http://192.168.49.3
+        - http://192.168.49.3:443
+      relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+#         target_label: instance
+        target_label: target
+      - target_label: __address__ 
+        replacement: prom-blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+
+#    - job_name: "blackbox_exporter/kubernetes-services"
+#      metrics_path: /probe
+#      params:
+#        module:
+#        - http_k8s_get
+##      static_configs:
+##      - labels:
+##          tenvironment: minikube
+#      kubernetes_sd_configs:
+#      - role: service
+#      relabel_configs:
+#      - source_labels: [__address__]
+#        target_label: __param_target
+#      - target_label: __address__
+#        replacement: prom-blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+#      - source_labels: [__param_target]
+#        target_label: instance
+#      - action: labelmap
+#        regex: __meta_kubernetes_service_label_(.+)
+#      - source_labels: [__meta_kubernetes_namespace]
+#        target_label: kubernetes_namespace
+#      - source_labels: [__meta_kubernetes_service_name]
+#        target_label: kubernetes_service_name
+#      - source_labels: [__meta_kubernetes_namespace]
+#        target_label: namespace
+#
+#    - job_name: "blackbox_exporter/kubernetes-ingresses"
+#      metrics_path: /probe
+#      params:
+#        module:
+#        - http_k8s_get
+##      static_configs:
+##      - labels:
+##          tenvironment: minikube
+#      kubernetes_sd_configs:
+#      - role: ingress
+#      relabel_configs:
+#      - source_labels:
+#          [
+#            __meta_kubernetes_ingress_scheme,
+#            __address__,
+#            __meta_kubernetes_ingress_path,
+#          ]
+#        regex: (.+);(.+);(.+)
+#        replacement: ${1}://${2}${3}
+#        target_label: __param_target
+#      - target_label: __address__
+#        replacement: prom-blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+#      - source_labels: [__param_target]
+#        target_label: instance
+#      - action: labelmap
+#        regex: __meta_kubernetes_ingress_label_(.+)
+#      - source_labels: [__meta_kubernetes_namespace]
+#        target_label: kubernetes_namespace
+#      - source_labels: [__meta_kubernetes_ingress_name]
+#        target_label: kubernetes_ingress_name
+#      - source_labels: [__meta_kubernetes_namespace]
+#        target_label: namespace
+#
+#    - job_name: "blackbox_exporter/kubernetes-pods"
+#      metrics_path: /probe
+#      params:
+#        module:
+#        - http_k8s_get
+##      static_configs:
+##      - labels:
+##          tenvironment: minikube
+#      kubernetes_sd_configs:
+#      - role: pod
+#      relabel_configs:
+#      - source_labels: [__address__]
+#        target_label: __param_target
+#      - target_label: __address__
+#        replacement: prom-blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+#      - source_labels: [__param_target]
+#        replacement: ${1}/health
+#        target_label: instance
+#      - action: labelmap
+#        regex: __meta_kubernetes_pod_label_(.+)
+#      - source_labels: [__meta_kubernetes_namespace]
+#        target_label: kubernetes_namespace
+#      - source_labels: [__meta_kubernetes_pod_name]
+#        target_label: kubernetes_pod_name
+#      - source_labels: [__meta_kubernetes_namespace]
+#        target_label: namespace
+#
+#    - job_name: "blackbox_exporter/kubernetes-endpoints"
+#      metrics_path: /probe
+#      params:
+#        module:
+#        - http_k8s_get
+##      static_configs:
+##      - labels:
+##          tenvironment: minikube
+#      kubernetes_sd_configs:
+#      - role: endpoints
+#      relabel_configs:
+#      - source_labels: [__address__]
+#        target_label: __param_target
+#      - target_label: __address__
+#        replacement: prom-blackbox-exporter-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+#      - source_labels: [__param_target]
+#        target_label: instance
+#      - action: labelmap
+#        regex: __meta_kubernetes_endpoints_label_(.+)
+#      - source_labels: [__meta_kubernetes_namespace]
+#        target_label: kubernetes_namespace
+#      - source_labels: [__meta_kubernetes_endpoints_name]
+#        target_label: kubernetes_endpoint_name
+#      - source_labels: [__meta_kubernetes_namespace]
+#        target_label: namespace

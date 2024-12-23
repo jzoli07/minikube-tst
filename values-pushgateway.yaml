@@ -1,0 +1,9 @@
+replicaCount: 1
+runAsStatefulSet: false
+
+#persistentVolume:
+#  enabled: true
+#  storageClass: default
+#  size: 4Gi
+#  accessModes:
+#    - ReadWriteOnce

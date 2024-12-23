@@ -1,0 +1,13 @@
+Dokumentáció
+
+1. lépés: virtuális gép letöltése (virtualbox, vmware), OS telepítése (linux mint)
+
+A virtuális gépnek legalább 2 processzort kell adni, és 8 GB induló memóriát, host-gép mappa felcsatolása
+
+2. lépés: csomagok telepítése Synaptic-ban 
+
+Szükség lesz a docker, docker.io, sublime-text csomagok telepítésére 
+
+3. lépés: minikube, kubectl telepítése 
+
+

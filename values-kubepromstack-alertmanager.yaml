@@ -1,0 +1,122 @@
+alertmanager:
+  enabled: true
+
+#  service:
+#    externalTrafficPolicy: Cluster
+#    type: LoadBalancer
+
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - minikube.alertmanager.local
+    path: /
+
+  alertmanagerSpec:
+    retention: 168h
+#    configSecret: alertmanager-prom-kube-prometheus-stack-alertmanager
+
+  config:
+    global:
+      resolve_timeout: 8m
+      slack_api_url: https://hooks.slack.com/services/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 
+
+    inhibit_rules:
+      - equal:
+          - namespace
+          - alertname
+        source_matchers:
+          - severity = critical
+        target_matchers:
+          - severity =~ "warning|info|none"
+      - equal:
+          - namespace
+          - alertname
+        source_matchers:
+          - severity = warning
+        target_matchers:
+          - severity =~ "info|none"
+      - equal:
+          - namespace
+          - alertname
+        source_matchers:
+          - severity = info
+        target_matchers:
+          - severity =~ "none"
+      - target_matchers:
+          - severity =~ "info|none"
+
+    receivers:
+      - name: devnull
+      - name: gmail-slack-webhook
+        webhook_configs:
+           - max_alerts: 1
+             send_resolved: true
+             url: http://host.minikube.internal:8088/hooks/redeploy
+             http_config:
+               tls_config:
+                 insecure_skip_verify: true
+               follow_redirects: true
+        slack_configs:
+          - channel: '#recieving-minikube-alertmanager-alerts'
+            send_resolved: false
+        email_configs:
+          - to: 'kubestackpromzoltan@gmail.com'
+            from: 'kubestackpromzoltan@gmail.com'
+            smarthost: smtp.gmail.com:587
+            auth_username: 'kubestackpromzoltan@gmail.com'
+            auth_identity: 'kubestackpromzoltan@gmail.com'
+            auth_password: 'ubhbgakrzoctyjua'
+            headers:
+              Subject: '[{{ .Status | toUpper }}] Kube-promstack Alert: {{ .GroupLabels.alertname }}'
+            html: |
+              <html>
+              <body>
+              <p>{{ .CommonAnnotations.summary }}</p>
+              <p>{{ range .Alerts }}
+                <strong>KUBEPROMSTACK<br>
+                <strong>{{ .Labels.alertname }}</strong>: {{ .Annotations.description }}<br>
+                <strong>Severity</strong>: {{ .Labels.severity }}<br>
+                <strong>Instance</strong>: {{ .Labels.instance }}<br>
+                <strong>Time</strong>: {{ .StartsAt }}<br>
+                <hr>
+              {{ end }}</p>
+              </body>
+              </html>
+            text: |
+              Alert: {{ .CommonLabels.alertname }}
+              Summary: {{ .CommonAnnotations.summary }}
+              {{ range .Alerts }}
+              Alert Name: {{ .Labels.alertname }}
+              Severity: {{ .Labels.severity }}
+              Instance: {{ .Labels.instance }}
+              Description: {{ .Annotations.description }}
+              Time: {{ .StartsAt }}
+              ----------------------------------------
+              {{end}}
+
+    route:
+      continue: false
+#      group_by: ['...']
+      group_by:
+        - alertname
+      group_wait: 15s
+      group_interval: 30s
+      repeat_interval: 1h
+      receiver: gmail-slack-webhook
+      routes:
+         - matchers:
+             - alertname =~ ".*"
+             - severity =~ "critical|warning"
+           receiver: gmail-slack-webhook
+#          group_by:
+#            - ...
+#            - alertname
+#            - alertstate
+#            - namespace
+#          group_interval: 8m
+#          group_wait: 1m
+#          repeat_interval: 6h
+
+    templates:
+      - /etc/alertmanager/config/*.tmpl

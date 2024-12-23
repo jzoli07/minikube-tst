@@ -1,0 +1,47 @@
+---
+# Source: apache-exporter/templates/patch-template.yaml
+spec:
+  template:
+    metadata:
+      annotations:
+    spec:
+      containers:
+      - name: apache-exporter
+        image: "quay.io/sysdig/apache-exporter:v0.11.5"
+        args:
+          - "--scrape_uri"
+          - "http://localhost/server-status/?auto"
+        ports:
+          - containerPort: 9117   
+        resources:
+          limits:
+            cpu: 64m
+            memory: 128Mi
+          requests:
+            cpu: 32m
+            memory: 64Mi
+      - name: grok-exporter
+        image:  "quay.io/sysdig/grok-exporter:v1.0.6"        
+        ports:
+          - containerPort: 9144
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "64m"
+        volumeMounts:
+          - name: grok-config
+            mountPath: /grok/config.yml
+            subPath: config.yml
+          - name: apache-logs
+            mountPath: /tmp/logs
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: apache-config
+          name: apache-config
+        - configMap:
+            defaultMode: 420
+            name: grok-config
+          name: grok-config  
+        - name: apache-logs
+          emptyDir: {}

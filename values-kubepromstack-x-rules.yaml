@@ -1,0 +1,54 @@
+additionalPrometheusRulesMap:
+  rule-name:
+    groups:
+    - name: "test-rules"
+      rules: 
+      - alert: myTest
+        expr: pgwtestvalue == 0
+        for: 3s
+        labels:
+          severity: critical
+          team: test-admin
+          alma: korte
+          email: alma@alma.hu
+        annotations:
+          summary: "Test alert."
+          description: "Test alert.\nVALUE={{ $value }}\nLABELS: {{ $labels }}\nSeverity={{ $labels.severity }}"
+
+
+    - name: "performance-rules"
+      rules:
+      - record: myNode_memory_free_percent
+        expr: (node_memory_MemFree_bytes / node_memory_MemTotal_bytes) * 100
+
+      - record: myNode_memory_used_percent
+        expr: 100 - ((node_memory_MemFree_bytes / node_memory_MemTotal_bytes) * 100)
+
+    - name: "blackbox-rules"
+      rules:
+      - alert: myBlackboxProbeDown
+        expr: up{job=~"^.*blackbox_exporter.*$"} == 0 or probe_success{job="^.*blackbox_exporter.*$"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Probe down."
+          description: "Probe is down.\nVALUE={{ $value }}\nLABELS: {{ $labels }}\nSeverity={{ $labels.severity }}"
+
+      - alert: myBlackboxProbeSlow
+        expr: avg_over_time(probe_duration_seconds[1m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow probe."
+          description: "Blackbox probe took more than 1s to complete.\nVALUE={{ $value }}\nLABELS: {{ $labels }}\nSeverity={{ $labels.severity }}"
+
+      - alert: myBlackboxHttpStatusCode
+        expr: probe_http_status_code < 200 or probe_http_status_code >= 400
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "HTTP Status Code wrong."
+          description: "HTTP status code is not 200-399.\nVALUE={{ $value }}\nLABELS: {{ $labels }}\nSeverity={{ $labels.severity }}"

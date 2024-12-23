@@ -1,0 +1,112 @@
+alertmanager:
+  enabled: true
+
+#  service:
+#    externalTrafficPolicy: Cluster
+#    type: LoadBalancer
+
+  alertmanagerSpec:
+    retention: 168h
+#    configSecret: alertmanager-prom-kube-prometheus-stack-alertmanager
+
+#    storage:
+#      volumeClaimTemplate:
+#        spec:
+#          storageClassName: default
+#          accessModes:
+#            - ReadWriteOnce
+#          resources:
+#            requests:
+#              storage: 2Gi
+
+  config:
+    global:
+      resolve_timeout: 8m
+
+    inhibit_rules:
+      - equal:
+          - namespace
+          - alertname
+        source_matchers:
+          - severity = critical
+        target_matchers:
+          - severity =~ "warning|info|none"
+      - equal:
+          - namespace
+          - alertname
+        source_matchers:
+          - severity = warning
+        target_matchers:
+          - severity =~ "info|none"
+      - equal:
+          - namespace
+          - alertname
+        source_matchers:
+          - severity = info
+        target_matchers:
+          - severity =~ "none"
+      - target_matchers:
+          - severity =~ "info|none"
+#      - target_matchers:
+#          - alertname =~ "InfoInhibitor|Watchdog|myTest"
+#      - target_matchers:
+#          - alertname =~ "myBlackboxHttpStatusCode"
+#      - target_matchers:
+#          - alertname =~ "PrometheusOutOfOrderTimestamps"
+#      - target_matchers:
+#          - namespace =~ "em20-dev"
+#      - target_matchers:
+#          - instance =~ "10.100.1.*:9100"
+
+    receivers:
+      - name: devnull
+      # - name: webhook
+      #   webhook_configs:
+      #     - max_alerts: 1
+      #       send_resolved: true
+      #       url: http://host.minikube.internal:8088/hooks/redeploy
+      #       http_config:
+      #         tls_config:
+      #           insecure_skip_verify: true
+      #         follow_redirects: true
+      - name: email
+        email_configs:
+          - to: kubestackpromzoltan@gmail.com
+            from: kubestackpromzoltan@gmail.com
+            smarthost: smpt.gmail.com:587
+            auth_username: kubestackpromzoltan@gmail.com
+            auth_identity: kubestackpromzoltan@gmail.com
+            auth_password: "jcsi tqzj chmg jbyb"  
+            send_resolved: true
+            require_tls: false
+
+    route:
+      continue: true
+#      group_by: ['...']
+      group_by: 
+        - alertname
+      group_wait: 15s
+      group_interval: 30s
+      repeat_interval: 1m
+      receiver: email
+#      receiver: webhook
+      routes:
+        # - matchers:
+        #     - alertname =~ ".*"
+        #     - severity =~ "critical|warning"
+        #   receiver: webhook
+        - matchers:
+            - alertname =~ ".*"
+            - severity =~ "critical|warning"
+          receiver: email
+#          group_by:
+#            - ...
+#            - alertname
+#            - alertstate
+#            - namespace
+#          group_interval: 8m
+#          group_wait: 1m
+#          repeat_interval: 6h
+
+    templates:
+      - /etc/alertmanager/config/*.tmpl
